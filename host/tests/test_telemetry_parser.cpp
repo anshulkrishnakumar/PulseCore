@@ -100,3 +100,39 @@ TEST(TelemetryParserTest, AcceptsMaximumHumidity)
     EXPECT_TRUE(parseTelemetryLine(line, data));
     EXPECT_FLOAT_EQ(data.humidity, 100.0f);
 }
+
+// Test 11: Reject trailing characters in temperature
+TEST(TelemetryParserTest, RejectsTrailingCharactersInTemperature)
+{
+    std::string line = "TEMP:24.5abc,HUM:46.2,PRESS:100.45";
+    SensorData data{};
+
+    EXPECT_FALSE(parseTelemetryLine(line, data));
+}
+
+// Test 12: Reject trailing characters in pressure
+TEST(TelemetryParserTest, RejectsTrailingCharactersInPressure)
+{
+    std::string line = "TEMP:24.5,HUM:46.2,PRESS:100.45xyz";
+    SensorData data{};
+
+    EXPECT_FALSE(parseTelemetryLine(line, data));
+}
+
+// Test 13: Reject missing fields
+TEST(TelemetryParserTest, RejectsMissingPressure)
+{
+    std::string line = "TEMP:24.5,HUM:46.2";
+    SensorData data{};
+
+    EXPECT_FALSE(parseTelemetryLine(line, data));
+}
+
+// Test 14: Reject extra fields
+TEST(TelemetryParserTest, RejectsExtraFields)
+{
+    std::string line = "TEMP:24.5,HUM:46.2,PRESS:100.45,ALT:20";
+    SensorData data{};
+
+    EXPECT_FALSE(parseTelemetryLine(line, data));
+}

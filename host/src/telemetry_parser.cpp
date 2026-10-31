@@ -7,15 +7,18 @@ bool parseTelemetryLine(const std::string& line, SensorData& data) {
     float humidity;
     float pressure;
 
+    int consumed = 0;
+
     int result = std::sscanf(
         line.c_str(),
-        "TEMP:%f,HUM:%f,PRESS:%f",
+        "TEMP:%f,HUM:%f,PRESS:%f%n",
         &temperature,
         &humidity,
-        &pressure
+        &pressure,
+        &consumed
     );
 
-    if (result != 3) {
+    if (result != 3 || consumed != static_cast<int>(line.size())) {
         return false;
     }
 
@@ -25,7 +28,7 @@ bool parseTelemetryLine(const std::string& line, SensorData& data) {
     return false;
     }
 
-    if (temperature < -40.0f || temperature > 85.0f ||
+    if (temperature < -40.0f || temperature > 85.0f || // limits for BME280
         humidity < 0.0f || humidity > 100.0f ||
         pressure <= 0.0f) {
         return false;
