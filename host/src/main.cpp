@@ -2,7 +2,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
+
 #include "telemetry_parser.hpp"
+#include "database.hpp"
 
 
 int main()
@@ -46,10 +48,22 @@ int main()
         return 1;
     }
 
+    sqlite3* db = nullptr;
+
+    if (!initializeDatabase(&db, "pulsecore.db")) {
+        std::cerr << "Failed to initialize database\n";
+        close(serial_fd);
+        return 1;
+    }
+
+    std::cout << "PulseCore: Database initialized\n";
+
     std::cout << "PulseCore: Connected to " << port << "\n";
 
     std::string pending_line;
     char buffer[256];
+
+    bool synchronized = false;
 
     while (true) {
         ssize_t bytes_read = read(serial_fd, buffer, sizeof(buffer));
@@ -60,6 +74,16 @@ int main()
         }
 
         for (ssize_t i = 0; i < bytes_read; i++) {
+
+            // ignore data until the first complete line arrives.
+            if (!synchronized) {
+                if (buffer[i] == '\n') {
+                    synchronized = true;
+                }
+
+                continue;
+            }
+
             if (buffer[i] == '\n') {
                 if (!pending_line.empty() && pending_line.back() == '\r') {
                     pending_line.pop_back();
@@ -70,6 +94,11 @@ int main()
                     SensorData data;
 
                     if (parseTelemetryLine(pending_line, data)) {
+
+                        if (!insertSensorData(db, data)) {
+                            std::cerr << "Failed to save sensor data\n";
+                        }
+
                         std::cout << "Temperature: " << data.temperature << " C\n";
                         std::cout << "Humidity: " << data.humidity << " %\n";
                         std::cout << "Pressure: " << data.pressure << " kPa\n";
@@ -86,7 +115,7 @@ int main()
             }
         }
     }
-
+    closeDatabase(db);
     close(serial_fd);
     return 0;
 }
