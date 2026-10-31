@@ -2,11 +2,14 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
+#include "telemetry_parser.hpp"
 
-int main() {
+
+int main()
+{
     const char* port = "/dev/ttyACM0";
 
-    int serial_fd = open(port, O_RDONLY | O_NOCTTY); // read only + no controlling terminal
+    int serial_fd = open(port, O_RDONLY | O_NOCTTY);
 
     if (serial_fd < 0) {
         std::cerr << "Error: Could not open serial port\n";
@@ -31,7 +34,7 @@ int main() {
     tty.c_cflag |= CREAD | CLOCAL;
 
     tty.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
-    tty.c_iflag &= ~(IXON | IXOFF | IXANY);
+    tty.c_iflag &= ~(IXON | IXOFF | IXANY | ICRNL | INLCR | IGNCR);
     tty.c_oflag &= ~OPOST;
 
     tty.c_cc[VMIN] = 1;
@@ -45,17 +48,42 @@ int main() {
 
     std::cout << "PulseCore: Connected to " << port << "\n";
 
+    std::string pending_line;
     char buffer[256];
 
     while (true) {
         ssize_t bytes_read = read(serial_fd, buffer, sizeof(buffer));
 
-        if (bytes_read > 0) {
-            std::cout.write(buffer, bytes_read);
-            std::cout.flush();
-        } else if (bytes_read < 0) {
+        if (bytes_read < 0) {
             std::cerr << "Error reading serial data\n";
             break;
+        }
+
+        for (ssize_t i = 0; i < bytes_read; i++) {
+            if (buffer[i] == '\n') {
+                if (!pending_line.empty() && pending_line.back() == '\r') {
+                    pending_line.pop_back();
+                }
+
+                SensorData data;
+                if (!pending_line.empty()) {
+                    SensorData data;
+
+                    if (parseTelemetryLine(pending_line, data)) {
+                        std::cout << "Temperature: " << data.temperature << " C\n";
+                        std::cout << "Humidity: " << data.humidity << " %\n";
+                        std::cout << "Pressure: " << data.pressure << " kPa\n";
+                        std::cout << "-------------------------\n";
+                    } else {
+                        std::cerr << "Invalid telemetry record: "
+                                << pending_line << "\n";
+                    }
+                }
+
+                pending_line.clear();
+            } else {
+                pending_line += buffer[i];
+            }
         }
     }
 

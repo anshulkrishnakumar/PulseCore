@@ -8,6 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_executable(pulsecore_host
     src/main.cpp
+    src/telemetry_parser.cpp
 )
 
 target_include_directories(pulsecore_host PRIVATE include)
