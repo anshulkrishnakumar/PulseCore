@@ -3,6 +3,8 @@
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/sys/printk.h>
 
+#include "database.hpp"
+
 #define BME280_NODE DT_NODELABEL(bme280)
 
 int main(void)
@@ -31,12 +33,11 @@ int main(void)
             sensor_channel_get(bme280, SENSOR_CHAN_PRESS,
                                &pressure);
 
-            printk("Temperature: %d.%06d C\n",
-                   temperature.val1, temperature.val2);
-            printk("Humidity: %d.%06d %%\n",
-                   humidity.val1, humidity.val2);
-            printk("Pressure: %d.%06d kPa\n",
-                   pressure.val1, pressure.val2);
+        printk("TEMP:%d.%06d,HUM:%d.%06d,PRESS:%d.%06d\n",
+            temperature.val1, temperature.val2,
+            humidity.val1, humidity.val2,
+            pressure.val1, pressure.val2);
+            
         } else {
             printk("PulseCore: Sensor read failed (%d)\n", ret);
         }
