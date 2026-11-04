@@ -12,6 +12,7 @@ add_executable(pulsecore_host
     src/main.cpp
     src/telemetry_parser.cpp
     src/database.cpp
+    src/diagnostics.cpp
 )
 
 target_include_directories(pulsecore_host PRIVATE include)
@@ -40,8 +41,10 @@ enable_testing()
 add_executable(pulsecore_tests
     tests/test_telemetry_parser.cpp
     tests/test_database.cpp
+    tests/test_diagnostics.cpp
     src/telemetry_parser.cpp
     src/database.cpp
+    src/diagnostics.cpp
 )
 
 target_include_directories(pulsecore_tests PRIVATE include)

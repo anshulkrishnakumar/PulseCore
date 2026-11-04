@@ -2,9 +2,13 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
+#include <string>
+#include <vector>
+
 
 #include "telemetry_parser.hpp"
 #include "database.hpp"
+#include "diagnostics.hpp"
 
 
 int main()
@@ -90,23 +94,34 @@ int main()
                 }
 
                 SensorData data;
-                if (!pending_line.empty()) {
-                    SensorData data;
 
-                    if (parseTelemetryLine(pending_line, data)) {
+                if (parseTelemetryLine(pending_line, data)) {
 
-                        if (!insertSensorData(db, data)) {
-                            std::cerr << "Failed to save sensor data\n";
-                        }
-
-                        std::cout << "Temperature: " << data.temperature << " C\n";
-                        std::cout << "Humidity: " << data.humidity << " %\n";
-                        std::cout << "Pressure: " << data.pressure << " kPa\n";
-                        std::cout << "-------------------------\n";
-                    } else {
-                        std::cerr << "Invalid telemetry record: "
-                                << pending_line << "\n";
+                    if (!insertSensorData(db, data)) {
+                        std::cerr << "Failed to save sensor data\n";
                     }
+
+                    // Run diagnostics on the incoming sensor data
+                    std::vector<DiagnosticEvent> events =
+                        evaluateSensorData(data);
+
+                    for (const auto& event : events) {
+                        std::cerr << "["
+                                << (event.severity == DiagnosticSeverity::WARNING
+                                        ? "WARNING" : "ERROR")
+                                << "] "
+                                << event.code << ": "
+                                << event.message << "\n";
+                    }
+
+                    std::cout << "Temperature: " << data.temperature << " C\n";
+                    std::cout << "Humidity: " << data.humidity << " %\n";
+                    std::cout << "Pressure: " << data.pressure << " kPa\n";
+                    std::cout << "-------------------------\n";
+
+                } else {
+                    std::cerr << "Invalid telemetry record: "
+                            << pending_line << "\n";
                 }
 
                 pending_line.clear();
