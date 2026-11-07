@@ -106,12 +106,17 @@ int main()
                         evaluateSensorData(data);
 
                     for (const auto& event : events) {
+
                         std::cerr << "["
                                 << (event.severity == DiagnosticSeverity::WARNING
                                         ? "WARNING" : "ERROR")
                                 << "] "
                                 << event.code << ": "
                                 << event.message << "\n";
+
+                        if (!insertDiagnosticEvent(db, event)) {
+                            std::cerr << "Failed to save diagnostic event\n";
+                        }
                     }
 
                     std::cout << "Temperature: " << data.temperature << " C\n";
