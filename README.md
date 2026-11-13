@@ -78,11 +78,23 @@ The embedded firmware runs three Zephyr threads:
 
 A mutex protects shared monitoring counters.
 
-### Failure Detection
+### Failure Detection and Recovery
 
-The firmware tracks consecutive sensor communication failures. After three consecutive failures, it reports a communication error.
+The firmware monitors consecutive BME280 communication failures.
 
-The sensor is retried automatically on subsequent acquisition cycles. Successful sensor readings reset the failure counter.
+Tracks consecutive sensor read failures.
+
+Reports a communication error after three consecutive failures.
+
+Automatically retries sensor acquisition every two seconds.
+
+Detects successful communication recovery.
+
+Reports a recovery message when the sensor resumes responding.
+
+Resets the consecutive failure counter after successful sensor readings.
+
+This allows PulseCore to detect and report sensor communication faults without requiring a firmware restart.
 
 ## Host Application
 
