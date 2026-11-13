@@ -116,7 +116,9 @@ void telemetry_thread(void)
             continue;
         }
 
+        k_mutex_lock(&stats_mutex, K_FOREVER);
         samples_transmitted++;
+        k_mutex_unlock(&stats_mutex);
 
         printk("TEMP:%d.%06d,HUM:%d.%06d,PRESS:%d.%06d\n",
                data.temperature.val1, data.temperature.val2,

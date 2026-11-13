@@ -124,10 +124,16 @@ int main()
                     std::cout << "Pressure: " << data.pressure << " kPa\n";
                     std::cout << "-------------------------\n";
 
-                } else {
-                    std::cerr << "Invalid telemetry record: "
-                            << pending_line << "\n";
-                }
+                    } else if (pending_line.rfind("PulseCore Stats:", 0) == 0) {
+                        std::cout << pending_line << "\n";
+
+                    } else if (pending_line.rfind("PulseCore:", 0) == 0) {
+                        std::cout << pending_line << "\n";
+
+                    } else {
+                        std::cerr << "Invalid telemetry record: "
+                                << pending_line << "\n";
+                    }
 
                 pending_line.clear();
             } else {
