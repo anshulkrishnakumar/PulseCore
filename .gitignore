@@ -1,6 +1,7 @@
 # Build output
 build/
 cmake-build-*/
+host/build/
 
 # Compiled binaries and debugging files
 *.elf
@@ -14,6 +15,11 @@ cmake-build-*/
 __pycache__/
 *.py[cod]
 .venv/
+
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
 
 # IDE and editor settings
 .vscode/
