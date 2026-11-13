@@ -82,17 +82,12 @@ A mutex protects shared monitoring counters.
 
 The firmware monitors consecutive BME280 communication failures.
 
-Tracks consecutive sensor read failures.
-
-Reports a communication error after three consecutive failures.
-
-Automatically retries sensor acquisition every two seconds.
-
-Detects successful communication recovery.
-
-Reports a recovery message when the sensor resumes responding.
-
-Resets the consecutive failure counter after successful sensor readings.
+- Tracks consecutive sensor read failures.
+- Reports a communication error after three consecutive failures.
+- Automatically retries sensor acquisition every two seconds.
+- Detects successful communication recovery.
+- Reports a recovery message when the sensor resumes responding.
+- Resets the consecutive failure counter after successful sensor readings.
 
 This allows PulseCore to detect and report sensor communication faults without requiring a firmware restart.
 
