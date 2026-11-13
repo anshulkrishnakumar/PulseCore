@@ -127,3 +127,104 @@ TEST_F(DatabaseTest, PreservesDataAfterReopening)
 
     sqlite3_finalize(statement);
 }
+
+// Test 5: Diagnostic events table creation
+TEST_F(DatabaseTest, CreatesDiagnosticEventsTable)
+{
+    sqlite3_stmt* statement = nullptr;
+
+    const char* sql =
+        "SELECT name FROM sqlite_master "
+        "WHERE type='table' AND name='diagnostic_events';";
+
+    ASSERT_EQ(
+        sqlite3_prepare_v2(db, sql, -1, &statement, nullptr),
+        SQLITE_OK
+    );
+
+    EXPECT_EQ(sqlite3_step(statement), SQLITE_ROW);
+
+    sqlite3_finalize(statement);
+}
+
+// Test 6: Successful diagnostic event insertion
+TEST_F(DatabaseTest, InsertsDiagnosticEvent)
+{
+    DiagnosticEvent event{
+        DiagnosticSeverity::WARNING,
+        "TEMP_OUT_OF_RANGE",
+        "Temperature is outside the configured limits"
+    };
+
+    ASSERT_TRUE(insertDiagnosticEvent(db, event));
+
+    sqlite3_stmt* statement = nullptr;
+
+    ASSERT_EQ(
+        sqlite3_prepare_v2(
+            db,
+            "SELECT severity, code, message FROM diagnostic_events;",
+            -1,
+            &statement,
+            nullptr
+        ),
+        SQLITE_OK
+    );
+
+    ASSERT_EQ(sqlite3_step(statement), SQLITE_ROW);
+
+    EXPECT_STREQ(
+        reinterpret_cast<const char*>(sqlite3_column_text(statement, 0)),
+        "WARNING"
+    );
+
+    EXPECT_STREQ(
+        reinterpret_cast<const char*>(sqlite3_column_text(statement, 1)),
+        "TEMP_OUT_OF_RANGE"
+    );
+
+    EXPECT_STREQ(
+        reinterpret_cast<const char*>(sqlite3_column_text(statement, 2)),
+        "Temperature is outside the configured limits"
+    );
+
+    sqlite3_finalize(statement);
+}
+
+// Test 7: Multiple diagnostic event insertions
+TEST_F(DatabaseTest, InsertsMultipleDiagnosticEvents)
+{
+    DiagnosticEvent first{
+        DiagnosticSeverity::WARNING,
+        "TEMP_OUT_OF_RANGE",
+        "Temperature is outside the configured limits"
+    };
+
+    DiagnosticEvent second{
+        DiagnosticSeverity::ERROR,
+        "PRESS_OUT_OF_RANGE",
+        "Pressure is outside the configured limits"
+    };
+
+    ASSERT_TRUE(insertDiagnosticEvent(db, first));
+    ASSERT_TRUE(insertDiagnosticEvent(db, second));
+
+    sqlite3_stmt* statement = nullptr;
+
+    ASSERT_EQ(
+        sqlite3_prepare_v2(
+            db,
+            "SELECT COUNT(*) FROM diagnostic_events;",
+            -1,
+            &statement,
+            nullptr
+        ),
+        SQLITE_OK
+    );
+
+    ASSERT_EQ(sqlite3_step(statement), SQLITE_ROW);
+
+    EXPECT_EQ(sqlite3_column_int(statement, 0), 2);
+
+    sqlite3_finalize(statement);
+}
