@@ -83,6 +83,10 @@ void sensor_thread(void)
         }
 
         // All sensor readings succeeded.
+        if (consecutive_failures >= 3) {
+            printk("PulseCore: Sensor communication recovered\n");
+        }
+
         consecutive_failures = 0;
 
         int queue_ret = k_msgq_put(&sensor_msgq, &data, K_FOREVER);
